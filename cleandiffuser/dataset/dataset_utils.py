@@ -42,8 +42,6 @@ def create_indices(
         episode_length = end_idx - start_idx  # episode length
 
         min_start = -pad_before
-        # TODO: Maybe a bug here, should be max_start = ep_len - seq_len + (ep_len - action_step - 1)
-        # The code still works when action_step = horizon / 2
         max_start = episode_length - sequence_length + pad_after
 
         # range stops one idx before end

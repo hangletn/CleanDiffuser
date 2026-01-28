@@ -41,13 +41,12 @@ def make_env(args, idx):
     return thunk
 
 
-def inference(args, envs, dataset, agent, logger, current_step):
+def inference(args, envs, dataset, agent, logger):
     """Evaluate a trained agent and optionally save a video."""
     # ---------------- Start Rollout ----------------
     episode_rewards = []
     episode_steps = []
     episode_success = []
-    episode_coverages = []
     
     if args.diffusion == "ddpm":
         solver = None
@@ -58,15 +57,14 @@ def inference(args, envs, dataset, agent, logger, current_step):
     elif args.diffusion == "edm":
         solver = "euler"
         
-    for i in range(args.eval_episodes // args.num_envs):
-        coverage_area_list = []
+    for i in range(args.eval_episodes // args.num_envs): 
         ep_reward = [0.0] * args.num_envs
         step_reward = []
         obs, t = envs.reset(), 0
 
         # initialize video stream
         if args.save_video:
-            logger.video_init(envs.envs[0], enable=True, video_id=f"{current_step}_{i}")  # save videos
+            logger.video_init(envs.envs[0], enable=True, video_id=str(i))  # save videos
 
         while t < args.max_episode_steps:
             if args.env_name == 'pusht-v0':
@@ -110,32 +108,21 @@ def inference(args, envs, dataset, agent, logger, current_step):
             action = action_pred[:, start:end, :]
             
             obs, reward, done, info = envs.step(action)
-            info_concat = {key: [] for key in info[0].keys()}
-            for per_info in info:
-                for key, val in per_info.items():
-                    info_concat[key].append(val)
-            info_concat = {key: np.concatenate(val) for key, val in info_concat.items()}
             ep_reward += reward
             step_reward.append(reward)
             t += args.action_steps
-            coverage_area_list.append(info_concat["coverage"])
-            if done:
-                break
         
         ep_reward = np.around(np.array(ep_reward), 2)
         success = np.around(np.max(np.array(step_reward), axis=0), 2)
-        ep_coverage = np.around(np.max(np.concatenate(coverage_area_list), axis=0), 2)
         print(f"[Episode {1+i*(args.num_envs)}-{(i+1)*(args.num_envs)}] reward: {ep_reward} success:{success}")
         episode_rewards.append(ep_reward)
         episode_steps.append(t)
         episode_success.append(success)
-        episode_coverages.append(ep_coverage)
-    success_rate = np.nanmean(np.where(np.array(episode_success) == 1.0, 1.0, 0.0))
-    mean_coverage = np.nanmean(np.array(episode_coverages))
-    print(f"Mean step: {np.nanmean(episode_steps)} Mean reward: {np.nanmean(episode_rewards)} Mean success: {np.nanmean(episode_success)} Success rate: {success_rate} Mean coverage: {mean_coverage}")
-    return {'mean_step': np.nanmean(episode_steps), 'mean_reward': np.nanmean(episode_rewards), 'mean_success': np.nanmean(episode_success), 'success_rate': success_rate, 'mean_coverage': mean_coverage}
+    print(f"Mean step: {np.nanmean(episode_steps)} Mean reward: {np.nanmean(episode_rewards)} Mean success: {np.nanmean(episode_success)}")
+    return {'mean_step': np.nanmean(episode_steps), 'mean_reward': np.nanmean(episode_rewards), 'mean_success': np.nanmean(episode_success)}
 
-@hydra.main(config_path="../configs/dp/pusht/dit", config_name="pusht_keypoint")
+
+@hydra.main(config_path="../configs/dp/pusht/dit", config_name="pusht")
 def pipeline(args):
     # ---------------- Create Logger ----------------
     set_seed(args.seed)
@@ -210,13 +197,6 @@ def pipeline(args):
         from cleandiffuser.diffusion.edm import EDM
         agent = EDM(nn_diffusion=nn_diffusion, nn_condition=nn_condition, device=args.device,
                     optim_params={"lr": args.lr})
-    elif args.diffusion == "ddim": # TODO: This is not working yet...
-        from cleandiffuser.diffusion.ddim import DDIM
-        x_max = torch.ones((1, args.horizon, args.action_dim), device=args.device) * +1.0
-        x_min = torch.ones((1, args.horizon, args.action_dim), device=args.device) * -1.0
-        agent = DDIM(
-            nn_diffusion=nn_diffusion, nn_condition=nn_condition, device=args.device,
-            diffusion_steps=args.sample_steps, optim_params={"lr": args.lr})
     else:
         raise NotImplementedError
     lr_scheduler = CosineAnnealingLR(agent.optimizer, T_max=args.gradient_steps)
@@ -267,7 +247,7 @@ def pipeline(args):
                 agent.model.eval()
                 agent.model_ema.eval()
                 metrics = {'step': n_gradient_step}
-                metrics.update(inference(args, envs, dataset, agent, logger, n_gradient_step))
+                metrics.update(inference(args, envs, dataset, agent, logger))
                 logger.log(metrics, category='inference')
                 agent.model.train()
                 agent.model_ema.train()
@@ -296,3 +276,14 @@ def pipeline(args):
 
 if __name__ == "__main__":
     pipeline()
+
+
+
+
+
+
+
+
+
+    
+

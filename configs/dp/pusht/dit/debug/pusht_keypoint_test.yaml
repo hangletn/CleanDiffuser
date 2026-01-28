@@ -1,8 +1,0 @@
-# @package _global_
-
-gradient_steps: 2000
-
-# eval
-eval_episodes: 5
-eval_freq: 1000
-save_freq: 1000

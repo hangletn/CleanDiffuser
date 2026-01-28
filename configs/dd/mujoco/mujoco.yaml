@@ -10,8 +10,6 @@ device: cuda:0
 # Environment
 terminal_penalty: -100
 discount: 0.997
-geom_friction: [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
-body_mass: [0.5, 0.75, 1.0, 1.25, 1.5]
 
 # DD
 solver: ddim
@@ -40,12 +38,6 @@ num_envs: 50
 num_episodes: 3
 temperature: 0.5
 use_ema: True
-save_video: false
-eval_print_freq: 500
-
-# Fine-tune
-invdyn_gradient_steps_ft: 20000
-ft_save_interval: 5000
 
 # hydra
 hydra:
