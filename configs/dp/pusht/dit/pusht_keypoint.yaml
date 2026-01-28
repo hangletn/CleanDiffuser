@@ -3,7 +3,7 @@ pipeline_name: dp_pusht
 # env
 env_name: pusht-keypoints-v0
 abs_action: false
-dataset_path: dev/pusht/pusht_cchi_v7_replay.zarr
+dataset_path: /n/home04/hangle/diffusion_policy/data/pusht/pusht_cchi_v7_replay.zarr
 mode: train
 max_episode_steps: 300
 obs_keys: ["state", "action", "keypoint"]
@@ -12,14 +12,14 @@ action_dim: 2
 obs_steps: 2
 action_steps: 8
 # train
-device: cuda:3
+device: cuda:0
 seed: 0
-gradient_steps: 1000000
+gradient_steps: 500000
 batch_size: 256
-horizon: 10
+horizon: 16
 nn: dit
 diffusion: ddpm
-sample_steps: 5
+sample_steps: 20
 # optimizer
 lr: 0.0001
 # eval
@@ -28,12 +28,14 @@ eval_episodes: 50
 num_envs: 1
 eval_freq: 100000
 save_video: true
+success_threshold: 0.95
 # log
 exp_name: ${env_name}_abs_${abs_action}_${nn}_${diffusion}_sample_${sample_steps}_horizon_${horizon}
 save_path: logs
-project: CleanDiffuser
+project: PlayAdaptation
 group: dp_pusht
-wandb_mode: offline
+wandb_mode: online
+name: ${project}_${now:%Y%m%d_%H%M%S}
 log_freq: 1000
 save_freq: 100000
 work_dir: ${save_path}/${pipeline_name}/${mode}/${env_name}/${exp_name}_${now:%Y%m%d_%H%M%S}/${seed}

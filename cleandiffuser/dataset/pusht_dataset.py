@@ -69,11 +69,14 @@ class PushTStateDataset(BaseDataset):
         
         action = sample['action'].astype(np.float32)  # (T, 2)
         action = self.normalizer['action'].normalize(action)
+
+        n_contacts = sample["n_contacts"].astype(bool)
         data = {
             'obs': {
                 'state': state, # T, 5
             },
             'action': action,  # T, 2
+            "n_contacts": n_contacts,
         }
         return data
     
@@ -142,13 +145,15 @@ class PushTKeypointDataset(BaseDataset):
         # action
         action = sample['action'].astype(np.float32)  # (T, 2)
         action = self.normalizer['action'].normalize(action)
-        
+
+        n_contacts = sample["n_contacts"].astype(bool)
         data = {
             'obs': {
                 'keypoint': keypoint, # T, 18
                 'agent_pos': agent_pos, # T, 2
             },
             'action': action,  # T, 2
+            'n_contacts': n_contacts,
         }
         return data
     
@@ -217,12 +222,14 @@ class PushTImageDataset(BaseDataset):
         action = sample['action'].astype(np.float32)  # (T, 2)
         action = self.normalizer['action'].normalize(action)
         
+        n_contacts = sample["n_contacts"].astype(bool)
         data = {
             'obs': {
                 'image': image, # T, 3, 96, 96
                 'agent_pos': agent_pos, # T, 2
             },
             'action': action,  # T, 2
+            'n_contacts': n_contacts,
         }
         return data
     

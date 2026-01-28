@@ -33,8 +33,9 @@ class PushTEnv(gym.Env):
             legacy=False, 
             block_cog=None, damping=None,
             render_action=True,
-            render_size=96,
-            reset_to_state=None
+            render_size=256,
+            reset_to_state=None,
+            gravity=0.0
         ):
         self._seed = None
         self.seed()
@@ -65,6 +66,7 @@ class PushTEnv(gym.Env):
 
         self.block_cog = block_cog
         self.damping = damping
+        self.gravity = gravity
         self.render_action = render_action
 
         """
@@ -84,13 +86,19 @@ class PushTEnv(gym.Env):
         self.latest_action = None
         self.reset_to_state = reset_to_state
     
-    def reset(self):
-        seed = self._seed
+    def reset(self, seed=None):
+        #seed = self._seed
+        if seed is None:
+            seed = self._seed
+        else:
+            seed = seed
         self._setup()
         if self.block_cog is not None:
             self.block.center_of_gravity = self.block_cog
         if self.damping is not None:
             self.space.damping = self.damping
+        if self.gravity is not None:
+            self.space.gravity = self.gravity, 0
         
         # use legacy RandomState for compatibility
         state = self.reset_to_state
@@ -134,6 +142,8 @@ class PushTEnv(gym.Env):
 
         observation = self._get_obs()
         info = self._get_info()
+        info["coverage"] = coverage
+        info["is_success"] = done
 
         return observation, reward, done, info
 
@@ -287,8 +297,8 @@ class PushTEnv(gym.Env):
 
     def _setup(self):
         self.space = pymunk.Space()
-        self.space.gravity = 0, 0
-        self.space.damping = 0
+        self.space.gravity = self.gravity, 0
+        self.space.damping = self.damping if self.damping is not None else 0.0
         self.teleop = False
         self.render_buffer = list()
         

@@ -184,3 +184,9 @@ toy2.py
 lightning_logs/
 run.sh
 ignores/
+temp/
+
+# Notebooks folder. TODO: Clean up the notebook, move code to .py files and commit them later
+analyze_results/
+notebooks/
+test_notebook/
